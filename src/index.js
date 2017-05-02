@@ -2,6 +2,14 @@ import log4js from 'log4js'
 import mkdirp from 'mkdirp'
 import { parse, join, resolve, isAbsolute, dirname, basename } from 'path'
 
+let defaultAppenders = ['error', 'access'].map((item) => ({
+    backups: 4,
+    type: 'file',
+    category: 'error',
+    maxLogSize: 10485760,
+    filename: `${item}.log`
+}))
+
 export default function (options = {}) {
     let logs = {
         error: null,
@@ -49,12 +57,8 @@ function getLogger(category) {
     return log4js.getLogger(category)
 }
 
-function appendersHandler(appenders) {
+function appendersHandler(appenders = defaultAppenders) {
     let paths = []
-
-    if (!appenders) {
-        return []
-    }
 
     appenders = appenders.map((item) => {
         if (item.type === 'file') {
