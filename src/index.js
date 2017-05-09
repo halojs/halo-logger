@@ -5,7 +5,7 @@ import { parse, join, resolve, isAbsolute, dirname, basename } from 'path'
 let defaultAppenders = ['error', 'access'].map((item) => ({
     backups: 4,
     type: 'file',
-    category: 'error',
+    category: item,
     maxLogSize: 10485760,
     filename: `${item}.log`
 }))
@@ -25,26 +25,26 @@ export default function (options = {}) {
     logs.error.setLevel('INFO')
     logs.access.setLevel('INFO')
 
-    return function* _logger(next) {
-        let ctx = this.app.context
+    return async function _logger(ctx, next) {
+        let context = ctx.app.context
 
-        if (!ctx.logger) {
-            ctx.logger = function (err, level = 'error') {
-                logs.error[level].call(logs.error, ...formatErrorMessage(this.url, err, getErrorInfo()))
+        if (!context.logger) {
+            context.logger = function (err, level = 'error') {
+                logs.error[level].call(logs.error, ...formatErrorMessage(ctx.url, err, getErrorInfo()))
             }
         }
 
-        yield* next
+        await next()
 
         logs.access.info(
-            this.ip,
-            this.method,
-            this.url,
-            `${this.protocol.toUpperCase()}/${this.req.httpVersion}`,
-            this.status,
-            this.length || null,
-            this.get('referrer'),
-            this.header['user-agent']
+            ctx.ip,
+            ctx.method,
+            ctx.url,
+            `${ctx.protocol.toUpperCase()}/${ctx.req.httpVersion}`,
+            ctx.status,
+            ctx.length || null,
+            ctx.get('referrer'),
+            ctx.header['user-agent']
         )
     }
 }

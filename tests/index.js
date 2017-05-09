@@ -11,7 +11,7 @@ const req = request.defaults({
 })
 
 test.before.cb((t) => {
-    let app = koa()
+    let app = new koa()
     let options = {
         appenders: [{
             backups: 4,
@@ -35,12 +35,12 @@ test.before.cb((t) => {
     }
 
     app.use(logger(options))
-    app.use(mount('/access', function *() {
-        this.body = 'logger'
+    app.use(mount('/access', async function(ctx, next) {
+        ctx.body = 'logger'
     }))
-    app.use(mount('/error', function *() {
-        this.logger(new Error('test'))
-        this.body = 'logger'
+    app.use(mount('/error', async function(ctx, next) {
+        ctx.logger(new Error('test'))
+        ctx.body = 'logger'
     }))
     app.listen(3000, t.end)
 })
